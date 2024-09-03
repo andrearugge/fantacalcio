@@ -14,6 +14,7 @@ const playerRoutes = require("./routes/playerRoutes");
 
 const app = express();
 const server = http.createServer(app);
+const setupAuctionSocket = require('./auctionSocket');
 const io = socketIo(server, {
   cors: {
     origin: process.env.ALLOWED_ORIGINS
@@ -23,6 +24,8 @@ const io = socketIo(server, {
     credentials: true,
   }
 });
+
+setupAuctionSocket(io);
 
 console.log("Connecting to MongoDB...");
 if (!process.env.MONGODB_URI) {
