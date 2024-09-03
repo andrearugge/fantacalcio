@@ -1,18 +1,18 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const http = require("http");
-const socketIo = require("socket.io");
 require("dotenv").config();
+
+console.log('Starting server...');
 
 // Importa le rotte
 const participantRoutes = require("./routes/participantRoutes");
 const teamRoutes = require("./routes/teamRoutes");
 
 const app = express();
-const server = http.createServer(app);
 
 // Configurazione CORS
+console.log('Configuring CORS...');
 const corsOptions = {
   origin: process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(",")
@@ -24,32 +24,33 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Configurazione Socket.IO con CORS
-const io = socketIo(server, {
-  cors: corsOptions,
-});
-
 app.use(express.json());
 
 // Usa le rotte
+console.log('Setting up routes...');
 app.use("/api/participants", participantRoutes);
 app.use("/api/teams", teamRoutes);
 
+console.log('Connecting to MongoDB...');
 mongoose
   .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
   .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("Could not connect to MongoDB", err));
-
-io.on("connection", (socket) => {
-  console.log("New client connected");
-
-  socket.on("disconnect", () => {
-    console.log("Client disconnected");
+  .catch((err) => {
+    console.error("Could not connect to MongoDB", err);
+    process.exit(1);
   });
-});
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+console.log('Starting to listen on port...');
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+
+console.log('Server setup complete.');
