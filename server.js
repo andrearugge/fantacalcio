@@ -1,6 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const http = require("http");
+const socketIo = require("socket.io");
 require("dotenv").config();
 
 console.log("Starting server...");
@@ -8,8 +10,19 @@ console.log("Starting server...");
 // Importa le rotte
 const participantRoutes = require("./routes/participantRoutes");
 const teamRoutes = require("./routes/teamRoutes");
+const playerRoutes = require("./routes/playerRoutes");
 
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: process.env.ALLOWED_ORIGINS
+      ? process.env.ALLOWED_ORIGINS.split(",")
+      : ["http://localhost:3000", "https://fantacalcio-fe.vercel.app"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  }
+});
 
 console.log("Connecting to MongoDB...");
 if (!process.env.MONGODB_URI) {
@@ -39,10 +52,7 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
-const playerRoutes = require("./routes/playerRoutes");
-
 app.use(cors(corsOptions));
-
 app.use(express.json());
 
 // Usa le rotte
@@ -58,21 +68,20 @@ app._router.stack.forEach(function (r) {
   }
 });
 
-console.log("Connecting to MongoDB...");
-mongoose
-  .connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => {
-    console.error("Could not connect to MongoDB", err);
-    process.exit(1);
+// Configurazione Socket.IO
+io.on('connection', (socket) => {
+  console.log('New client connected');
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
   });
+
+  // Aggiungi qui altri eventi Socket.IO
+});
 
 const PORT = process.env.PORT || 5000;
 console.log("Starting to listen on port...");
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -86,3 +95,6 @@ app.use((req, res) => {
   console.log(`Route not found: ${req.method} ${req.url}`);
   res.status(404).json({ message: "Route not found" });
 });
+
+// Esporta io per poterlo utilizzare in altri file
+module.exports = { app, io };
