@@ -12,13 +12,10 @@ exports.createTeam = async (req, res) => {
 };
 
 exports.getAllTeams = async (req, res) => {
-  console.log("Ricevuta richiesta per getAllTeams");
   try {
     const teams = await Team.find();
-    console.log("Teams trovati:", teams);
     res.json(teams);
   } catch (error) {
-    console.error("Errore in getAllTeams:", error);
     res.status(500).json({ message: error.message });
   }
 };
