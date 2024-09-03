@@ -14,7 +14,7 @@ const io = socketIo(server);
 const teamRoutes = require('./routes/teamRoutes');
 
 const corsOptions = {
-  origin: '*',
+  origin: 'https://fantacalcio-fe.vercel.app',
   optionsSuccessStatus: 200,
 };
 
