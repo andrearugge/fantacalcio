@@ -11,12 +11,16 @@ const participantRoutes = require('./routes/participantRoutes');
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
+const teamRoutes = require('./routes/teamRoutes');
 
 app.use(cors());
 app.use(express.json());
 
 // Usa le rotte dei partecipanti
 app.use('/api/participants', participantRoutes);
+
+// Usa le rotte del team
+app.use('/api/teams', teamRoutes);
 
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connected to MongoDB'))
