@@ -5,28 +5,34 @@ const http = require("http");
 const socketIo = require("socket.io");
 require("dotenv").config();
 
-// Importa le rotte dei partecipanti
+// Importa le rotte
 const participantRoutes = require("./routes/participantRoutes");
+const teamRoutes = require("./routes/teamRoutes");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
-const teamRoutes = require("./routes/teamRoutes");
 
+// Configurazione CORS
 const corsOptions = {
-  origin: "*",
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  preflightContinue: false,
-  // optionsSuccessStatus: 204,
+  origin: process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",")
+    : ["http://localhost:3000", "https://fantacalcio-fe.vercel.app"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+  optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
+
+// Configurazione Socket.IO con CORS
+const io = socketIo(server, {
+  cors: corsOptions,
+});
+
 app.use(express.json());
 
-// Usa le rotte dei partecipanti
+// Usa le rotte
 app.use("/api/participants", participantRoutes);
-
-// Usa le rotte del team
 app.use("/api/teams", teamRoutes);
 
 mongoose
