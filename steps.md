@@ -26,9 +26,7 @@
 
 ## 4. Gestione dei Calciatori
 
-4.1. "Crea un modello MongoDB e le relative API per la gestione dei calciatori, includendo nome, ruolo e squadra di appartenenza."
-
-4.2. "Implementa un'interfaccia per l'admin per aggiungere, modificare ed eliminare i calciatori dal database."
+4.1. "Crea un modello MongoDB e le relative API per la gestione dei calciatori, includendo nome, ruolo e squadra di appartenenza. Deve essere possibile caricare un file in formato .csv."
 
 4.3. "Sviluppa una vista per visualizzare tutti i calciatori, con possibilità di filtraggio per ruolo."
 

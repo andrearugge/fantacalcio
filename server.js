@@ -39,6 +39,8 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
+const playerRoutes = require("./routes/playerRoutes");
+
 app.use(cors(corsOptions));
 
 app.use(express.json());
@@ -47,13 +49,14 @@ app.use(express.json());
 console.log("Setting up routes...");
 app.use("/api/participants", participantRoutes);
 app.use("/api/teams", teamRoutes);
+app.use("/api/players", playerRoutes);
 
 // Dopo aver definito tutte le tue route
-app._router.stack.forEach(function(r){
-  if (r.route && r.route.path){
-    console.log(r.route.path)
+app._router.stack.forEach(function (r) {
+  if (r.route && r.route.path) {
+    console.log(r.route.path);
   }
-})
+});
 
 console.log("Connecting to MongoDB...");
 mongoose
@@ -81,5 +84,5 @@ console.log("Server setup complete.");
 
 app.use((req, res) => {
   console.log(`Route not found: ${req.method} ${req.url}`);
-  res.status(404).json({ message: 'Route not found' });
+  res.status(404).json({ message: "Route not found" });
 });
