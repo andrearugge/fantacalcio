@@ -13,7 +13,12 @@ const server = http.createServer(app);
 const io = socketIo(server);
 const teamRoutes = require('./routes/teamRoutes');
 
-app.use(cors());
+const corsOptions = {
+  origin: '*',
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Usa le rotte dei partecipanti

@@ -10,11 +10,11 @@
 
 ## 2. Autenticazione e Autorizzazione
 
-2.1. "Implementa un sistema di autenticazione JWT per l'admin, includendo login e logout."
+- 2.1. "Implementa un sistema di autenticazione JWT per l'admin, includendo login e logout."
 
 2.2. "Crea un meccanismo per generare link univoci per i partecipanti all'asta."
 
-2.3. "Implementa la logica per verificare e gestire le autorizzazioni dell'admin e dei partecipanti."
+- 2.3. "Implementa la logica per verificare e gestire le autorizzazioni dell'admin e dei partecipanti."
 
 ## 3. Gestione delle Squadre
 
