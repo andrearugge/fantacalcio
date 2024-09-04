@@ -18,7 +18,7 @@ const teamSchema = new mongoose.Schema({
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Participant',
-    required: true
+    required: false  // Cambiato da true a false
   }
 }, { timestamps: true });
 

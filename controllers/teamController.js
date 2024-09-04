@@ -67,21 +67,18 @@ exports.setupTeams = async (req, res) => {
   try {
     const { teams } = req.body;
     if (!Array.isArray(teams) || teams.length !== 8) {
-      return res
-        .status(400)
-        .json({ message: "Devi fornire esattamente 8 nomi di squadre" });
+      return res.status(400).json({ message: 'Devi fornire esattamente 8 nomi di squadre' });
     }
 
-    const createdTeams = await Promise.all(
-      teams.map(async (teamName) => {
-        const team = new Team({ name: teamName });
-        return await team.save();
-      })
-    );
+    const createdTeams = await Promise.all(teams.map(async (teamName) => {
+      const team = new Team({ 
+        name: teamName,
+        owner: null  // Impostiamo temporaneamente a null se non abbiamo un proprietario
+      });
+      return await team.save();
+    }));
 
-    res
-      .status(201)
-      .json({ message: "Squadre create con successo", teams: createdTeams });
+    res.status(201).json({ message: 'Squadre create con successo', teams: createdTeams });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
