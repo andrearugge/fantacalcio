@@ -31,10 +31,6 @@ const io = socketIo(server, {
   cors: corsOptions,
 });
 
-// Configurazione dell'auction socket
-const setupAuctionSocket = require("./auctionController");
-setupAuctionSocket(io);
-
 app.use(cors(corsOptions));
 app.use(express.json());
 
