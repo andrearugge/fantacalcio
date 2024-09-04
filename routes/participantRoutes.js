@@ -14,10 +14,12 @@ try {
 
 router.post('/', participantController.createParticipant);
 router.get('/:uniqueLink', participantController.getParticipantByLink);
+router.get('/', participantController.getAllParticipants);
 
 // Optionally, you can add a catch-all route for undefined participant routes
 router.use((req, res) => {
   res.status(404).json({ error: 'Participant route not found' });
 });
+
 
 module.exports = router;
