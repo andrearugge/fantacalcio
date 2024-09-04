@@ -1,4 +1,3 @@
-// controllers/playerController.js
 const Player = require("../models/Player");
 const csv = require("csv-parser");
 const fs = require("fs");
@@ -35,6 +34,7 @@ exports.uploadCSV = async (req, res) => {
   fs.createReadStream(req.file.path)
     .pipe(csv())
     .on("data", (data) => {
+      console.log("CSV Row:", data);  // Log each row for debugging
       const player = cleanPlayerData(data);
       if (player.name && player.role && player.team) {
         results.push(player);
@@ -46,23 +46,19 @@ exports.uploadCSV = async (req, res) => {
       try {
         console.log("CSV parsing completed. Valid rows:", results.length);
         await Player.deleteMany({});
-        const players = await Player.insertMany(results, { ordered: false });
-        console.log("Players inserted:", players.length);
+        const insertedPlayers = await Player.insertMany(results, { ordered: false });
+        console.log("Players inserted:", insertedPlayers.length);
         fs.unlinkSync(req.file.path);
-        res
-          .status(201)
-          .json({ message: `${players.length} players imported successfully` });
+        res.status(201).json({ message: `${insertedPlayers.length} players imported successfully` });
       } catch (error) {
         console.error("Error processing CSV:", error);
         if (error.name === "ValidationError") {
           const validationErrors = Object.values(error.errors).map(
             (err) => err.message
           );
-          res
-            .status(400)
-            .json({ message: "Validation error", errors: validationErrors });
+          res.status(400).json({ message: "Validation error", errors: validationErrors });
         } else {
-          res.status(500).json({ message: "Error importing players" });
+          res.status(500).json({ message: "Error importing players", error: error.message });
         }
       }
     })
@@ -75,7 +71,7 @@ exports.uploadCSV = async (req, res) => {
 function cleanPlayerData(data) {
   return {
     name: data.name ? data.name.trim() : "",
-    role: data.role ? data.role.trim().toLowerCase() : "",
+    role: data.role ? data.role.trim().toUpperCase() : "",  // Changed to uppercase to match your CSV
     team: data.team ? data.team.trim() : "",
   };
 }
