@@ -63,6 +63,8 @@ exports.deleteTeam = async (req, res) => {
   }
 };
 
+const Team = require('../models/Team');
+
 exports.setupTeams = async (req, res) => {
   try {
     const { teams } = req.body;
@@ -70,16 +72,40 @@ exports.setupTeams = async (req, res) => {
       return res.status(400).json({ message: 'Devi fornire esattamente 8 nomi di squadre' });
     }
 
-    const createdTeams = await Promise.all(teams.map(async (teamName) => {
-      const team = new Team({ 
-        name: teamName,
-        owner: null  // Impostiamo temporaneamente a null se non abbiamo un proprietario
-      });
-      return await team.save();
-    }));
+    const createdTeams = [];
+    const errors = [];
 
-    res.status(201).json({ message: 'Squadre create con successo', teams: createdTeams });
+    for (const teamName of teams) {
+      try {
+        const existingTeam = await Team.findOne({ name: teamName });
+        if (existingTeam) {
+          errors.push(`La squadra "${teamName}" esiste già`);
+        } else {
+          const team = new Team({ 
+            name: teamName,
+            // altri campi se necessario
+          });
+          const savedTeam = await team.save();
+          createdTeams.push(savedTeam);
+        }
+      } catch (error) {
+        errors.push(`Errore nel creare la squadra "${teamName}": ${error.message}`);
+      }
+    }
+
+    if (errors.length > 0) {
+      return res.status(400).json({ 
+        message: 'Si sono verificati degli errori durante la creazione delle squadre', 
+        errors,
+        createdTeams 
+      });
+    }
+
+    res.status(201).json({ 
+      message: 'Squadre create con successo', 
+      teams: createdTeams 
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
