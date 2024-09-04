@@ -2,6 +2,13 @@ const Player = require("./models/Player");
 const { v4: uuidv4 } = require("uuid");
 
 const auctions = new Map();
+const participantLinks = new Map();
+
+function generateParticipantLink(participantId) {
+  const linkId = uuidv4();
+  participantLinks.set(linkId, participantId);
+  return `/auction-participant/${linkId}`;
+}
 
 function setupSocketIO(io) {
   io.on("connection", (socket) => {
@@ -34,7 +41,6 @@ function setupSocketIO(io) {
 
         auctions.set(auctionId, auction);
 
-        // Update player status in the database
         await Player.findByIdAndUpdate(playerId, {
           auctionStatus: "inAuction",
         });
@@ -95,9 +101,41 @@ function setupSocketIO(io) {
       }
     });
 
+    socket.on("createParticipantLink", (participantId) => {
+      const link = generateParticipantLink(participantId);
+      socket.emit("participantLinkCreated", { participantId, link });
+    });
+
+    socket.on("getParticipantLinks", () => {
+      const links = Array.from(participantLinks).map(
+        ([linkId, participantId]) => ({
+          linkId,
+          participantId,
+          url: `/auction-participant/${linkId}`,
+        })
+      );
+      socket.emit("participantLinks", links);
+    });
+
+    socket.on("joinAsParticipant", (linkId) => {
+      const participantId = participantLinks.get(linkId);
+      if (participantId) {
+        socket.participantId = participantId;
+        socket.emit("joinedAsParticipant", { participantId });
+      } else {
+        socket.emit("auctionError", "Invalid participant link");
+      }
+    });
+
+    socket.on("notifyParticipant", ({ linkId, auctionId }) => {
+      const participantId = participantLinks.get(linkId);
+      if (participantId) {
+        io.to(participantId).emit("auctionStarted", { auctionId });
+      }
+    });
+
     socket.on("disconnect", () => {
       console.log("Client disconnected");
-      // Remove participant from all auctions they were in
       auctions.forEach((auction) => {
         auction.participants.delete(socket.id);
       });
@@ -125,7 +163,6 @@ async function endAuction(io, auctionId) {
   if (!auction) return;
 
   try {
-    // Update player in the database
     await Player.findByIdAndUpdate(auction.player._id, {
       auctionStatus: "sold",
       soldTo: auction.currentBidder,
