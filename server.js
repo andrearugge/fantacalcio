@@ -14,18 +14,29 @@ const playerRoutes = require("./routes/playerRoutes");
 
 const app = express();
 const server = http.createServer(app);
-const setupAuctionSocket = require('./auctionSocket');
+
+// Configurazione CORS
+console.log("Configuring CORS...");
+const corsOptions = {
+  origin: process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",")
+    : ["http://localhost:3000", "https://fantacalcio-fe.vercel.app"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+  optionsSuccessStatus: 204,
+};
+
+// Configurazione Socket.IO
 const io = socketIo(server, {
-  cors: {
-    origin: process.env.ALLOWED_ORIGINS
-      ? process.env.ALLOWED_ORIGINS.split(",")
-      : ["http://localhost:3000", "https://fantacalcio-fe.vercel.app"],
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
-  }
+  cors: corsOptions,
 });
 
+// Configurazione dell'auction socket
+const setupAuctionSocket = require("./auctionController");
 setupAuctionSocket(io);
+
+app.use(cors(corsOptions));
+app.use(express.json());
 
 console.log("Connecting to MongoDB...");
 if (!process.env.MONGODB_URI) {
@@ -44,60 +55,36 @@ mongoose
     process.exit(1);
   });
 
-// Configurazione CORS
-console.log("Configuring CORS...");
-const corsOptions = {
-  origin: process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(",")
-    : ["http://localhost:3000", "https://fantacalcio-fe.vercel.app"],
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true,
-  optionsSuccessStatus: 204,
-};
-
-app.use(cors(corsOptions));
-app.use(express.json());
-
 // Usa le rotte
 console.log("Setting up routes...");
 app.use("/api/participants", participantRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/players", playerRoutes);
 
-// Dopo aver definito tutte le tue route
+// Logging delle route definite
 app._router.stack.forEach(function (r) {
   if (r.route && r.route.path) {
     console.log(r.route.path);
   }
 });
 
-// Configurazione Socket.IO
-io.on('connection', (socket) => {
-  console.log('New client connected');
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send("Something broke!");
+});
 
-  socket.on('disconnect', () => {
-    console.log('Client disconnected');
-  });
-
-  // Aggiungi qui altri eventi Socket.IO
+// 404 handler
+app.use((req, res) => {
+  console.log(`Route not found: ${req.method} ${req.url}`);
+  res.status(404).json({ message: "Route not found" });
 });
 
 const PORT = process.env.PORT || 5000;
 console.log("Starting to listen on port...");
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
-});
-
 console.log("Server setup complete.");
 
-app.use((req, res) => {
-  console.log(`Route not found: ${req.method} ${req.url}`);
-  res.status(404).json({ message: "Route not found" });
-});
-
-// Esporta io per poterlo utilizzare in altri file
+// Esporta app e io per poterli utilizzare in altri file
 module.exports = { app, io };
