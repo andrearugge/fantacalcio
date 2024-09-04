@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const auctionSchema = new mongoose.Schema({
   id: String,
   status: {
