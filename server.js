@@ -12,6 +12,7 @@ const participantRoutes = require("./routes/participantRoutes");
 const teamRoutes = require("./routes/teamRoutes");
 const playerRoutes = require("./routes/playerRoutes");
 const Player = require("./models/Player");
+const auctionRoutes = require("./routes/auctionRoutes");
 const Auction = require("./models/Auction");
 
 const app = express();
