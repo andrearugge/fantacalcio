@@ -11,6 +11,7 @@ console.log("Starting server...");
 const participantRoutes = require("./routes/participantRoutes");
 const teamRoutes = require("./routes/teamRoutes");
 const playerRoutes = require("./routes/playerRoutes");
+const auctionRoutes = require("./routes/auctionRoutes"); // Aggiungi questa linea
 
 const app = express();
 const server = http.createServer(app);
@@ -34,6 +35,9 @@ const io = socketIo(server, {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Rendi io accessibile in tutta l'app
+app.set("io", io);
+
 console.log("Connecting to MongoDB...");
 if (!process.env.MONGODB_URI) {
   console.error("MONGODB_URI is not defined in the environment variables");
@@ -56,6 +60,21 @@ console.log("Setting up routes...");
 app.use("/api/participants", participantRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/players", playerRoutes);
+app.use("/api/auctions", auctionRoutes); // Aggiungi questa linea
+
+// Socket.IO event handlers
+io.on("connection", (socket) => {
+  console.log("New client connected");
+
+  socket.on("joinAuction", ({ auctionId }) => {
+    socket.join(auctionId);
+    console.log(`Client joined auction: ${auctionId}`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected");
+  });
+});
 
 // Logging delle route definite
 app._router.stack.forEach(function (r) {
