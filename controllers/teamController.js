@@ -63,8 +63,6 @@ exports.deleteTeam = async (req, res) => {
   }
 };
 
-const Team = require('../models/Team');
-
 exports.setupTeams = async (req, res) => {
   try {
     const { teams } = req.body;
@@ -81,7 +79,7 @@ exports.setupTeams = async (req, res) => {
         if (existingTeam) {
           errors.push(`La squadra "${teamName}" esiste già`);
         } else {
-          const team = new Team({ 
+          const team = new Team({
             name: teamName,
             // altri campi se necessario
           });
@@ -94,16 +92,16 @@ exports.setupTeams = async (req, res) => {
     }
 
     if (errors.length > 0) {
-      return res.status(400).json({ 
-        message: 'Si sono verificati degli errori durante la creazione delle squadre', 
+      return res.status(400).json({
+        message: 'Si sono verificati degli errori durante la creazione delle squadre',
         errors,
         createdTeams 
       });
     }
 
-    res.status(201).json({ 
-      message: 'Squadre create con successo', 
-      teams: createdTeams 
+    res.status(201).json({
+      message: 'Squadre create con successo',
+      teams: createdTeams
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
