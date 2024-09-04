@@ -7,11 +7,12 @@ require("dotenv").config();
 
 console.log("Starting server...");
 
-// Importa le rotte
+// Importa le rotte e i modelli
 const participantRoutes = require("./routes/participantRoutes");
 const teamRoutes = require("./routes/teamRoutes");
 const playerRoutes = require("./routes/playerRoutes");
-const auctionRoutes = require("./routes/auctionRoutes"); // Aggiungi questa linea
+const Player = require("./models/Player");
+const Auction = require("./models/Auction");
 
 const app = express();
 const server = http.createServer(app);
@@ -60,21 +61,86 @@ console.log("Setting up routes...");
 app.use("/api/participants", participantRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/players", playerRoutes);
-app.use("/api/auctions", auctionRoutes); // Aggiungi questa linea
+app.use("/api/auctions", auctionRoutes);
 
 // Socket.IO event handlers
 io.on("connection", (socket) => {
   console.log("New client connected");
 
-  socket.on("joinAuction", ({ auctionId }) => {
-    socket.join(auctionId);
-    console.log(`Client joined auction: ${auctionId}`);
+  socket.on("joinAuction", ({ participantId }) => {
+    socket.join(participantId);
+    console.log(`Participant joined auction: ${participantId}`);
+  });
+
+  socket.on("startAuction", async ({ playerId }) => {
+    try {
+      const player = await Player.findById(playerId);
+      if (player) {
+        const auction = new Auction({
+          player: playerId,
+          startTime: new Date(),
+          duration: 60,
+          status: "active",
+        });
+        await auction.save();
+        io.emit("auctionStarted", { player, duration: 60 });
+        console.log(`Auction started for player: ${player.name}`);
+
+        // Set a timeout to end the auction after 60 seconds
+        setTimeout(async () => {
+          await endAuction(auction._id);
+        }, 60000);
+      }
+    } catch (error) {
+      console.error("Error starting auction:", error);
+    }
+  });
+
+  socket.on("placeBid", async ({ participantId, amount }) => {
+    try {
+      const currentAuction = await Auction.findOne({ status: "active" });
+      if (currentAuction) {
+        currentAuction.bids.push({ participant: participantId, amount });
+        await currentAuction.save();
+        io.emit("newBid", { participantId, amount });
+        console.log(`New bid placed: ${amount} by ${participantId}`);
+      }
+    } catch (error) {
+      console.error("Error placing bid:", error);
+    }
   });
 
   socket.on("disconnect", () => {
     console.log("Client disconnected");
   });
 });
+
+// Function to end the auction
+async function endAuction(auctionId) {
+  try {
+    const auction = await Auction.findById(auctionId).populate(
+      "bids.participant"
+    );
+    if (auction && auction.status === "active") {
+      auction.status = "completed";
+      if (auction.bids.length > 0) {
+        const winningBid = auction.bids.reduce((prev, current) =>
+          prev.amount > current.amount ? prev : current
+        );
+        auction.winner = winningBid.participant;
+      }
+      await auction.save();
+      io.emit("auctionEnded", { auction });
+      console.log(
+        `Auction ended. Winner: ${
+          auction.winner ? auction.winner.name : "No winner"
+        }`
+      );
+    }
+  } catch (error) {
+    console.error("Error ending auction:", error);
+  }
+}
 
 // Logging delle route definite
 app._router.stack.forEach(function (r) {

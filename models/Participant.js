@@ -48,4 +48,4 @@ participantSchema.pre("save", function (next) {
   next();
 });
 
-module.exports;
+module.exports = mongoose.model("Participant", participantSchema);
