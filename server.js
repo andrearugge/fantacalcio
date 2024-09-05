@@ -8,7 +8,6 @@ require("dotenv").config();
 console.log("Starting server...");
 
 // Importa le rotte
-const participantRoutes = require("./routes/participantRoutes");
 const teamRoutes = require("./routes/teamRoutes");
 const playerRoutes = require("./routes/playerRoutes");
 
@@ -56,7 +55,6 @@ mongoose
 
 // Usa le rotte
 console.log("Setting up routes...");
-app.use("/api/participants", participantRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/players", playerRoutes);
 
