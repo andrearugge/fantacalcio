@@ -2,67 +2,21 @@ const Auction = require("../models/Auction");
 const Player = require("../models/Player");
 const Team = require("../models/Team");
 
+const { endActiveAuctions } = require("./auctionHelpers"); // Assicurati che il percorso sia corretto
+
 exports.startAuction = async (req, res) => {
   console.log("Richiesta di avvio asta ricevuta:", req.body);
   try {
+    // Termina tutte le aste attive prima di iniziarne una nuova
+    await endActiveAuctions();
+
     const { playerId } = req.body;
     if (!playerId) {
       console.log("PlayerId mancante nella richiesta");
       return res.status(400).json({ message: "PlayerId è richiesto" });
     }
 
-    console.log("Cercando il giocatore con ID:", playerId);
-    const player = await Player.findById(playerId);
-    if (!player) {
-      console.log("Giocatore non trovato per l'ID:", playerId);
-      return res.status(404).json({ message: "Giocatore non trovato" });
-    }
-    console.log("Giocatore trovato:", player);
-
-    console.log("Verificando se c'è un'asta in corso...");
-    const ongoingAuction = await Auction.findOne({ status: "ongoing" });
-    if (ongoingAuction) {
-      console.log("Asta in corso trovata:", ongoingAuction);
-      return res.status(400).json({ message: "C'è già un'asta in corso" });
-    }
-
-    console.log("Creando una nuova asta...");
-    const auction = new Auction({
-      player: playerId,
-      startTime: new Date(),
-      endTime: new Date(Date.now() + 20000), // 20 secondi
-      status: "ongoing",
-    });
-
-    console.log("Salvando la nuova asta...");
-    await auction.save();
-    console.log("Nuova asta salvata:", auction);
-
-    console.log("Aggiornando il giocatore con l'ID dell'asta...");
-    player.currentAuction = auction._id;
-    await player.save();
-    console.log("Giocatore aggiornato");
-
-    console.log("Emettendo l'evento socket per l'inizio dell'asta...");
-    const io = req.app.get("io");
-    if (io) {
-      io.emit("auctionStarted", {
-        auctionId: auction._id,
-        player: {
-          _id: player._id,
-          name: player.name,
-          role: player.role,
-          team: player.team,
-        },
-        endTime: auction.endTime,
-      });
-      console.log("Evento socket emesso");
-    } else {
-      console.log("Oggetto io non trovato");
-    }
-
-    console.log("Inviando la risposta al client...");
-    res.status(201).json(auction);
+    // ... resto del codice della tua funzione startAuction ...
   } catch (error) {
     console.error("Errore nell'avvio dell'asta:", error);
     res
