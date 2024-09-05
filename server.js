@@ -5,6 +5,10 @@ const http = require("http");
 const socketIo = require("socket.io");
 require("dotenv").config();
 
+require('./models/Team');
+require('./models/Player');
+require('./models/Participant');
+
 console.log("Starting server...");
 
 // Importa le rotte

@@ -1,4 +1,5 @@
 const Team = require("../models/Team");
+const Participant = require("../models/Participant");
 
 exports.createTeam = async (req, res) => {
   try {
@@ -67,7 +68,9 @@ exports.setupTeams = async (req, res) => {
   try {
     const { teams } = req.body;
     if (!Array.isArray(teams) || teams.length !== 8) {
-      return res.status(400).json({ message: 'Devi fornire esattamente 8 nomi di squadre' });
+      return res
+        .status(400)
+        .json({ message: "Devi fornire esattamente 8 nomi di squadre" });
     }
 
     const createdTeams = [];
@@ -87,21 +90,24 @@ exports.setupTeams = async (req, res) => {
           createdTeams.push(savedTeam);
         }
       } catch (error) {
-        errors.push(`Errore nel creare la squadra "${teamName}": ${error.message}`);
+        errors.push(
+          `Errore nel creare la squadra "${teamName}": ${error.message}`
+        );
       }
     }
 
     if (errors.length > 0) {
       return res.status(400).json({
-        message: 'Si sono verificati degli errori durante la creazione delle squadre',
+        message:
+          "Si sono verificati degli errori durante la creazione delle squadre",
         errors,
-        createdTeams 
+        createdTeams,
       });
     }
 
     res.status(201).json({
-      message: 'Squadre create con successo',
-      teams: createdTeams
+      message: "Squadre create con successo",
+      teams: createdTeams,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
