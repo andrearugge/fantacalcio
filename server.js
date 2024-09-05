@@ -10,6 +10,7 @@ console.log("Starting server...");
 // Importa le rotte
 const teamRoutes = require("./routes/teamRoutes");
 const playerRoutes = require("./routes/playerRoutes");
+const auctionRoutes = require("./routes/auctionRoutes"); // Nuova route per l'asta
 
 const app = express();
 const server = http.createServer(app);
@@ -57,6 +58,7 @@ mongoose
 console.log("Setting up routes...");
 app.use("/api/teams", teamRoutes);
 app.use("/api/players", playerRoutes);
+app.use("/api/auctions", auctionRoutes); // Nuova route per l'asta
 
 // Socket.IO event handlers
 io.on("connection", (socket) => {
@@ -64,6 +66,30 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("Client disconnected");
+  });
+
+  // Gestione eventi per l'asta
+  socket.on("joinAuction", (auctionId) => {
+    socket.join(auctionId);
+    console.log(`Client joined auction: ${auctionId}`);
+  });
+
+  socket.on("leaveAuction", (auctionId) => {
+    socket.leave(auctionId);
+    console.log(`Client left auction: ${auctionId}`);
+  });
+
+  socket.on("placeBid", async ({ auctionId, teamId, amount }) => {
+    try {
+      // Qui dovresti implementare la logica per piazzare un'offerta
+      // e aggiornare il database
+
+      // Emetti l'evento a tutti i client nell'asta
+      io.to(auctionId).emit("newBid", { teamId, amount });
+    } catch (error) {
+      console.error("Error placing bid:", error);
+      socket.emit("bidError", { message: "Errore nel piazzare l'offerta" });
+    }
   });
 });
 
